@@ -14,9 +14,9 @@ django启动前，需手动执行一次migration创建初始数库表，django�
 
 通用settings
 -----
-`SHARDING_COUNT_DEFAULT`固定数量分表的通用数量，默认为`10`
-`SHARDING_DATE_START_DEFAULT`日期分表的通用开始日期，默认为`2020-01-01`
-`SHARDING_DATE_FORMAT_DEFAULT`日期分表的通用表名日期后缀格式，默认为`%Y%m`按月分表
+* `SHARDING_COUNT_DEFAULT`固定数量分表的通用数量，默认为`10`
+* `SHARDING_DATE_START_DEFAULT`日期分表的通用开始日期，默认为`2020-01-01`
+* `SHARDING_DATE_FORMAT_DEFAULT`日期分表的通用表名日期后缀格式，默认为`%Y%m`按月分表
 
 基于固定分片数量的分表(适用于用户表这种数据量大且可估量的场景)
 -----

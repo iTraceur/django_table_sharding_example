@@ -1,10 +1,13 @@
 import calendar
+import math
+from collections import OrderedDict
 from importlib import import_module
 
 from django.conf import settings
 from django.contrib import admin
 from django.core.management import commands
 from django.db import connection
+from django.forms import model_to_dict
 from django.utils import timezone
 
 SHARDING_COUNT_DEFAULT = getattr(settings, 'SHARDING_COUNT_DEFAULT', 10)
@@ -12,7 +15,6 @@ SHARDING_DATE_START_DEFAULT = getattr(settings, 'SHARDING_DATE_START_DEFAULT', '
 SHARDING_DATE_FORMAT_DEFAULT = getattr(settings, 'SHARDING_DATE_FORMAT_DEFAULT', '%Y%m')
 
 shard_tables = {}
-admin_opts_map = {}
 admin_opts_map = {}
 
 
@@ -167,3 +169,49 @@ class ShardingMixin(object):
             'verbose_name': cls.__name__ + sharding,
             'verbose_name_plural': cls.__name__ + sharding
         }
+
+    @classmethod
+    def paginate_sharding(cls, page, page_size):
+        """Paginate the querysets of all shardings."""
+
+        total_count = 0
+        sharding_count_map = OrderedDict()
+        for sharding in cls.get_sharding_list():
+            count = cls.shard(sharding).objects.count()
+            sharding_count_map[sharding] = count
+            total_count += count
+
+        max_page = math.ceil(total_count / page_size) or 1
+        if page > max_page:
+            page = max_page
+
+        prev_page = 1
+        diff = 0
+        accumulation_count = 0
+        results = []
+        for sharding, count in sharding_count_map.items():
+            accumulation_count += count
+            page_num = math.ceil(accumulation_count / page_size)
+            if prev_page <= page <= page_num:
+                if diff:
+                    qs = cls.shard(sharding).objects.all()[0:diff]
+                    diff = 0
+                else:
+                    start = count - (accumulation_count - (page - 1) * page_size)
+                    end = start + page_size
+                    qs = cls.shard(sharding).objects.all()[start:end]
+                for obj in qs:
+                    results.append(model_to_dict(obj))
+                diff = page_size - len(results)
+                if diff:
+                    continue
+
+                break
+            prev_page = page_num
+
+        ret = {
+            'result': results,
+            'count': total_count,
+            'next_page': page + 1 if page < max_page else -1
+        }
+        return ret

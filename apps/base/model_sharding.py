@@ -180,17 +180,18 @@ class ShardingMixin(object):
             total_count += count
 
         max_page = math.ceil(total_count / page_size) or 1
-        if page > max_page:
+        if page == 0:
+            page = 1
+        elif page > max_page or page < 0:
             page = max_page
 
-        prev_page = 1
         diff = 0
         accumulation_count = 0
         results = []
         for sharding, count in sharding_count_map.items():
             accumulation_count += count
             page_num = math.ceil(accumulation_count / page_size)
-            if prev_page <= page <= page_num:
+            if page <= page_num:
                 if diff:
                     qs = cls.shard(sharding).objects.all()[0:diff]
                 else:
@@ -206,11 +207,9 @@ class ShardingMixin(object):
 
                 break
 
-            prev_page = page_num
-
         ret = {
             'result': results,
             'count': total_count,
-            'next_page': page + 1 if page < max_page else -1
+            'next_page': page + 1 if page < max_page else None
         }
         return ret

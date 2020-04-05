@@ -69,7 +69,7 @@ class UserView(JSONResponseMixin, View):
         else:
             self.ret['message'] = '请求错误，缺少user_name参数'
             self.ret['status_code'] = 400
-            
+
         return self.render_to_response(self.ret)
 
     def put(self, request, *args, **kwargs):
@@ -221,4 +221,3 @@ class LogView(JSONResponseMixin, View):
             self.ret['status_code'] = 400
 
         return self.render_to_response(self.ret)
-

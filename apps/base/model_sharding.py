@@ -20,9 +20,9 @@ admin_opts_map = {}
 
 def get_next_year_and_month(date):
     if date.month == 12:
-        return date.year+1, 1
+        return date.year + 1, 1
 
-    return date.year, date.month+1
+    return date.year, date.month + 1
 
 
 def create_model(abstract_model_class, sharding, meta_options=None):
@@ -46,8 +46,6 @@ def create_model(abstract_model_class, sharding, meta_options=None):
     meta_options.update(abstract_model_class.default_meta_options(sharding))
     for k, v in meta_options.items():
         setattr(Meta, k, v)
-
-
 
     attrs = {
         '__module__': abstract_model_class.__module__,
@@ -195,11 +193,11 @@ class ShardingMixin(object):
             if prev_page <= page <= page_num:
                 if diff:
                     qs = cls.shard(sharding).objects.all()[0:diff]
-                    diff = 0
                 else:
                     start = count - (accumulation_count - (page - 1) * page_size)
                     end = start + page_size
                     qs = cls.shard(sharding).objects.all()[start:end]
+
                 for obj in qs:
                     results.append(model_to_dict(obj))
                 diff = page_size - len(results)
@@ -207,6 +205,7 @@ class ShardingMixin(object):
                     continue
 
                 break
+
             prev_page = page_num
 
         ret = {
